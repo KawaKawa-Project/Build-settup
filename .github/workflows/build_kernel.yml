@@ -106,6 +106,4 @@ jobs:
       with:
         name: 5.10-ArteXCrit-Clang22-LTO-Kernel
         path: 5.10-ArteXCrit-Clang22-LTO-marble.zip
-
-        path: ArteCrit-Clang22-marble.zip
         
