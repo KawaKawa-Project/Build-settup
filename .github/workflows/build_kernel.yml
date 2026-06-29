@@ -44,15 +44,31 @@ jobs:
         cd kernel-src
         export ARCH=arm64
         export SUBARCH=arm64
+        
+        # Masukkan biner XClang ke urutan pertama PATH
         export PATH="$GITHUB_WORKSPACE/toolchain/xclang/bin:$PATH"
+        
+        # Definisikan biner pendukung LLVM murni milik XClang
         export CC=clang
+        export LD=ld.lld
+        export AR=llvm-ar
+        export NM=llvm-nm
+        export OBJCOPY=llvm-objcopy
+        export OBJDUMP=llvm-objdump
+        export STRIP=llvm-strip
+        
         export CLANG_TRIPLE=aarch64-linux-gnu-
         export CROSS_COMPILE=aarch64-linux-gnu-
         export CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
         
+        # Bersihkan sisa objek lama
         make clean && make mrproper
+        
+        # Buat konfigurasi out/gki_defconfig
         make O=out gki_defconfig
-        make O=out -j$(nproc)
+        
+        # Jalankan kompilasi menggunakan biner LLVM murni (Menghindari error ld-not-found)
+        make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
 
     - name: Package with AnyKernel3
       run: |
