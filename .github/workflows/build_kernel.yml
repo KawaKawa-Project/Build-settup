@@ -77,8 +77,8 @@ jobs:
         # Bersihkan sisa objek lama
         make clean && make mrproper
         
-        # Buat konfigurasi defconfig asli
-        make O=out gki_defconfig
+        # FIX UTAMA: Tambahkan LLVM=1 LLVM_IAS=1 di sini juga agar defconfig dibuat menggunakan Clang, bukan GCC!
+        make O=out LLVM=1 LLVM_IAS=1 gki_defconfig
         
         # Eksekusi kompilasi dengan bendera LLVM penuh sesuai standar Google
         make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
