@@ -27,15 +27,13 @@ jobs:
         # Clone Kernel Tree POCO F5 (marble)
         git clone https://github.com/LineageOS/android_kernel_xiaomi_sm8450.git -b lineage-23.2 kernel-src
         
-        # Download AOSP Clang 22 Resmi dari Google Prebuilts Git (seri r584948)
+        # Download Clang r596125 via Curl
         mkdir -p toolchain/aosp-clang
-        curl -fLo toolchain/aosp-clang/clang-r584948.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r584948.tar.gz"
-        
-        # Ekstraksi dengan aman
         cd toolchain/aosp-clang
-        tar -xf clang-r584948.tar.gz && rm clang-r584948.tar.gz
+        curl -LO https://github.com/AbuRider/scripts/releases/download/20260502/clang-r596125.tar.gz
+        tar -xf clang-r596125.tar.gz && rm clang-r596125.tar.gz
         
-        # FIX AMAN: Buat symlink langsung menggunakan full path absolut tanpa perlu pindah direktori manual
+        # FIX LINKER: Buat shortcut direktori linker tiruan agar Makefile mendeteksi ld.lld sebagai target linker GNU/Android
         mkdir -p bin
         ln -sf ld.lld bin/aarch64-linux-android-ld
         ln -sf ld.lld bin/aarch64-linux-gnu-ld
@@ -108,4 +106,3 @@ jobs:
       with:
         name: 5.10-ArteXCrit-Clang22-LTO-Kernel
         path: 5.10-ArteXCrit-Clang22-LTO-marble.zip
-        
