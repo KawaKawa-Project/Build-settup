@@ -35,10 +35,10 @@ jobs:
 
     - name: Clone Sources & Toolchain
       run: |
-        # Clone Kernel
+        # Clone Kernel Tree
         git clone https://github.com/LineageOS/android_kernel_xiaomi_sm8450.git -b lineage-23.2 kernel-src
         
-        # Download XClang
+        # Download XClang via Curl
         mkdir -p toolchain/xclang
         cd toolchain/xclang
         curl -L -o XClang-21-ThinLTO.tar.gz https://github.com/Xtra-Manager-Software/XClang-Binaries/releases/download/xclanglto-thin-21.1.8/XClang-21-ThinLTO.tar.gz
@@ -53,38 +53,46 @@ jobs:
       run: |
         cd kernel-src
         
-        # Patch ReSukiSU
+        # Patch ReSukiSU (KernelSU Reborn/Next Module)
         mkdir -p drivers/kernelsu
         cp -r ../ReSukiSU/kernel/* drivers/kernelsu/
-        echo "obj-\$(CONFIG_KSU) += kernelsu/" >> drivers/Makefile
+        if ! grep -q "CONFIG_KSU" drivers/Makefile; then
+            echo "obj-\$(CONFIG_KSU) += kernelsu/" >> drivers/Makefile
+        fi
         
-        # Patch SUSFS (Mencari dan menyalin patch 5.10 secara fleksibel)
-        cp ../susfs4ksu/Kernel_Patches/5.10/*add_susfs*.patch . || cp ../susfs4ksu/Kernel_Patches/*5.10*.patch . || true
+        # Patch SUSFS v5.10 (Mencari file patch secara fleksibel agar anti-error)
+        echo "Mencari dan menyalin patch SUSFS..."
+        find ../susfs4ksu/Kernel_Patches/ -type f -name "*5.10*.patch" -exec cp {} . \; 2>/dev/null || true
+        find ../susfs4ksu/Kernel_Patches/ -type f -name "*add_susfs*.patch" -exec cp {} . \; 2>/dev/null || true
+        find ../susfs4ksu/Kernel_Patches/ -type f -name "*ext4*.patch" -exec cp {} . \; 2>/dev/null || true
         
-        # Cari file patch ext4 jika ada, jika tidak ada kita gunakan patch utama yang tersedia
-        find ../susfs4ksu/Kernel_Patches/ -name "*ext4*.patch" -exec cp {} . \; 2>/dev/null || true
-        
-        # Aplikasikan semua patch .patch yang berhasil disalin ke folder ini
+        # Aplikasikan semua patch .patch yang berhasil disalin
         for patch in *.patch; do
-            [ -f "$patch" ] && git apply "$patch" --whitespace=nowarn || echo "Skip $patch"
+            if [ -f "$patch" ]; then
+                echo "Mengaplikasikan patch: $patch"
+                git apply "$patch" --whitespace=nowarn || echo "Gagal mengaplikasikan $patch, dilewati..."
+            fi
         done
         
-        # Salin file driver inti SUSFS ke tree kernel
-        cp ../susfs4ksu/fs/susfs.c fs/
-        cp ../susfs4ksu/include/linux/susfs.h include/linux/
+        # Salin file driver utama SUSFS ke filesystem kernel
+        cp ../susfs4ksu/fs/susfs.c fs/ || echo "Gagal salin susfs.c"
+        cp ../susfs4ksu/include/linux/susfs.h include/linux/ || echo "Gagal salin susfs.h"
         
-        # Custom Nama & Defconfig
+        # Custom Nama Kernel ke -ArteCrit-XClang-LTO
         sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-ArteCrit-XClang-LTO"/g' arch/arm64/configs/gki_defconfig
+        
+        # Inject Konfigurasi ReSukiSU & SUSFS di bagian bawah gki_defconfig
         cat <<EOF >> arch/arm64/configs/gki_defconfig
-        # ReSukiSU & SUSFS Configs
-        CONFIG_KSU=y
-        CONFIG_SUSFS=y
-        CONFIG_SUSFS_SHOW_SUS_PATH=y
-        CONFIG_SUSFS_SUS_MOUNT=y
-        CONFIG_SUSFS_SUS_KSTAT=y
-        CONFIG_SUSFS_TRY_UMOUNT=y
-        CONFIG_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
-        EOF
+
+# ReSukiSU & SUSFS Configs
+CONFIG_KSU=y
+CONFIG_SUSFS=y
+CONFIG_SUSFS_SHOW_SUS_PATH=y
+CONFIG_SUSFS_SUS_MOUNT=y
+CONFIG_SUSFS_SUS_KSTAT=y
+CONFIG_SUSFS_TRY_UMOUNT=y
+CONFIG_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
+EOF
 
     - name: Compilation Kernel
       run: |
@@ -117,7 +125,7 @@ jobs:
           # Masukkan file Image hasil compile ke folder AnyKernel
           cp kernel-src/out/arch/arm64/boot/Image AnyKernel/
           
-          # Modifikasi otomatis anykernel.sh untuk GKI POCO F5 (init_boot)
+          # Modifikasi otomatis anykernel.sh untuk GKI POCO F5 (Target partisi init_boot)
           cd AnyKernel
           sed -i 's/kernel.string=.*/kernel.string=ArteCrit-XClang-LTO/g' anykernel.sh
           sed -i 's/block=boot;/block=init_boot;/g' anykernel.sh
