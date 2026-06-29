@@ -3,10 +3,6 @@ name: Build ArteCrit Kernel
 on:
   workflow_dispatch: # Memperbolehkan kamu klik "Run workflow" manual dari web GitHub
 
-env:
-  TG_TOKEN: "8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w"
-  TG_CHAT_ID: "7127548846"
-
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -24,14 +20,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl zip patch
-
-    - name: Send TG Notification (Start)
-      run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" \
-        -d "chat_id=${{ env.TG_CHAT_ID }}" \
-        -d "text=🚀 <b>[ArteCrit Kernel]</b>%0AProses build dimulai di GitHub Actions!%0AMenyiapkan source..." \
-        -d "parse_mode=html"
+        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl zip
 
     - name: Clone Sources & Toolchain
       run: |
@@ -43,60 +32,15 @@ jobs:
         cd toolchain/xclang
         curl -L -o XClang-21-ThinLTO.tar.gz https://github.com/Xtra-Manager-Software/XClang-Binaries/releases/download/xclanglto-thin-21.1.8/XClang-21-ThinLTO.tar.gz
         tar -xf XClang-21-ThinLTO.tar.gz && rm XClang-21-ThinLTO.tar.gz
-        
-        # Clone SUSFS & ReSukiSU
-        cd ../..
-        git clone https://gitlab.com/simonpunk/susfs4ksu.git susfs4ksu
-        git clone https://github.com/ReSukiSU/ReSukiSU.git ReSukiSU
 
-    - name: Apply Patches & Customization
+    - name: Customization Name
       run: |
         cd kernel-src
-        
-        # 1. Integrasi ReSukiSU (KernelSU Fork)
-        mkdir -p drivers/kernelsu
-        cp -r ../ReSukiSU/kernel/* drivers/kernelsu/
-        if ! grep -q "CONFIG_KSU" drivers/Makefile; then
-            echo "obj-\$(CONFIG_KSU) += kernelsu/" >> drivers/Makefile
-        fi
-        
-        # 2. Patch SUSFS ke KernelSU (Sesuai Step 2 & 6 Dokumentasi SUSFS)
-        cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch drivers/kernelsu/
-        cd drivers/kernelsu
-        patch -p1 < 10_enable_susfs_for_ksu.patch || echo "Gagal patch KSU, skip..."
-        cd ../..
-        
-        # 3. Patch SUSFS ke Main Kernel (Sesuai Step 3, 4, 5 & 7 Dokumentasi SUSFS)
-        cp ../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-5.10.patch .
-        patch -p1 < 50_add_susfs_in_kernel-5.10.patch || echo "Gagal patch kernel, skip..."
-        
-        cp ../susfs4ksu/kernel_patches/fs/susfs.c fs/
-        cp ../susfs4ksu/kernel_patches/include/linux/susfs.h include/linux/
-        
         # Custom Nama Kernel ke -ArteCrit-XClang-LTO
         sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-ArteCrit-XClang-LTO"/g' arch/arm64/configs/gki_defconfig
-        
-        # Inject Konfigurasi ReSukiSU & SUSFS di bagian bawah gki_defconfig
-        cat <<EOF >> arch/arm64/configs/gki_defconfig
-
-# ReSukiSU & SUSFS Configs
-CONFIG_KSU=y
-CONFIG_CONFIG_KSU_SUSFS=y
-CONFIG_SUSFS=y
-CONFIG_SUSFS_SHOW_SUS_PATH=y
-CONFIG_SUSFS_SUS_MOUNT=y
-CONFIG_SUSFS_SUS_KSTAT=y
-CONFIG_SUSFS_TRY_UMOUNT=y
-CONFIG_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
-EOF
 
     - name: Compilation Kernel
       run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" \
-        -d "chat_id=${{ env.TG_CHAT_ID }}" \
-        -d "text=⚙️ <b>[ArteCrit Kernel]</b>%0AMemulai kompilasi dengan XClang LTO..." \
-        -d "parse_mode=html"
-        
         cd kernel-src
         export ARCH=arm64
         export SUBARCH=arm64
@@ -110,11 +54,9 @@ EOF
         make O=out gki_defconfig
         make O=out -j$(nproc)
 
-    - name: Check Build & Package with AnyKernel3
+    - name: Package with AnyKernel3
       run: |
         if [ -f "kernel-src/out/arch/arm64/boot/Image" ]; then
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=📦 <b>[ArteCrit Kernel]</b>%0ABuild sukses! Sedang mengemas kernel ke AnyKernel3 (init_boot GKI)..." -d "parse_mode=html"
-          
           # Clone AnyKernel3 Resmi
           git clone https://github.com/osm0sis/AnyKernel3.git AnyKernel
           
@@ -130,9 +72,8 @@ EOF
           
           # Buat file zip flashable
           zip -r9 "../ArteCrit-XClang-LTO-marble.zip" * -x .git* README.md
-          
         else
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=❌ <b>BUILD GAGAL!</b>%0AProses kompilasi kernel mengalami error." -d "parse_mode=html"
+          echo "Build gagal, file Image tidak ditemukan!"
           exit 1
         fi
 
@@ -141,11 +82,4 @@ EOF
       with:
         name: ArteCrit-Kernel-Flashable
         path: ArteCrit-XClang-LTO-marble.zip
-
-    - name: Send Final Telegram Notification
-      run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" \
-        -d "chat_id=${{ env.TG_CHAT_ID }}" \
-        -d "text=✅ <b>KERNEL ZIP SIAP DI-FLASH!</b>%0A%0A📦 <b>File:</b> ArteCrit-XClang-LTO-marble.zip%0A📱 <b>Device:</b> POCO F5 (marble)%0A🔥 <b>Features:</b> ReSukiSU + SUSFS%0A%0ASilakan unduh file zip langsung di halaman GitHub Actions repositori kamu." \
-        -d "parse_mode=html"
         
