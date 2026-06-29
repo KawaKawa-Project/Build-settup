@@ -33,16 +33,21 @@ jobs:
         curl -LO https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r584948.tar.gz
         tar -xf clang-r584948.tar.gz && rm clang-r584948.tar.gz
         
-        # Download AOSP GCC Cross Compilers (Untuk binutils lama yang masih dibutuhkan kernel 5.10)
-        cd ..
+        # TRIK JITU: Paksa buat symlink linker langsung di dalam core folder toolchain
+        cd bin
+        ln -sf ld.lld aarch64-linux-android-ld
+        ln -sf ld.lld aarch64-linux-gnu-ld
+        cd ../..
+        
+        # Download AOSP GCC Cross Compilers
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b main --depth=1 gcc-64
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b main --depth=1 gcc-32
 
     - name: Customization Name
       run: |
         cd kernel-src
-        # Ubah local version nama kernel menandakan penggunaan Clang 22
-        sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-ArteCrit-Clang22"/g' arch/arm64/configs/gki_defconfig
+        # Mengubah nama versi kernel sesuai permintaan
+        sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-5.10-ArteXCrit-Clang22-LTO"/g' arch/arm64/configs/gki_defconfig
 
     - name: Compilation Kernel
       run: |
@@ -50,16 +55,23 @@ jobs:
         export ARCH=arm64
         export SUBARCH=arm64
         
-        # Satukan semua path toolchain ke environment PATH
+        # Satukan semua path toolchain ke environment PATH resmi
         export PATH="$GITHUB_WORKSPACE/toolchain/aosp-clang/bin:$GITHUB_WORKSPACE/toolchain/gcc-64/bin:$GITHUB_WORKSPACE/toolchain/gcc-32/bin:$PATH"
         
         # Setup parameter build utama untuk Google Clang
         export CC=clang
+        export LD=ld.lld
+        export AR=llvm-ar
+        export NM=llvm-nm
+        export OBJCOPY=llvm-objcopy
+        export OBJDUMP=llvm-objdump
+        export STRIP=llvm-strip
+        
         export CLANG_TRIPLE=aarch64-linux-gnu-
         export CROSS_COMPILE=aarch64-linux-android-
         export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
         
-        # JALUR AMAN: Memaksa Clang 22 agar mengabaikan error ketatnya regulasi sintaks baru pada kode lama
+        # Mengabaikan ketatnya regulasi sintaks baru pada kode lama
         export KCFLAGS="-Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
         
         # Bersihkan sisa objek lama
@@ -68,7 +80,7 @@ jobs:
         # Buat konfigurasi defconfig asli
         make O=out gki_defconfig
         
-        # Eksekusi kompilasi dengan bendera LLVM penuh sesuai standar Google
+        # Eksekusi kompilasi dengan bendera LLVM penuh
         make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
 
     - name: Package with AnyKernel3
@@ -78,12 +90,12 @@ jobs:
           cp kernel-src/out/arch/arm64/boot/Image AnyKernel/
           
           cd AnyKernel
-          sed -i 's/kernel.string=.*/kernel.string=ArteCrit-Clang22/g' anykernel.sh
+          sed -i 's/kernel.string=.*/kernel.string=5.10-ArteXCrit-Clang22-LTO/g' anykernel.sh
           sed -i 's/block=boot;/block=init_boot;/g' anykernel.sh
           sed -i 's/#dump_boot;/dump_boot;/g' anykernel.sh
           sed -i 's/#write_boot;/write_boot;/g' anykernel.sh
           
-          zip -r9 "../ArteCrit-Clang22-marble.zip" * -x .git* README.md
+          zip -r9 "../5.10-ArteXCrit-Clang22-LTO-marble.zip" * -x .git* README.md
         else
           echo "Kompilasi gagal! Berkas Image tidak terbentuk."
           exit 1
@@ -92,6 +104,8 @@ jobs:
     - name: Upload Flashable Kernel Zip
       uses: actions/upload-artifact@v4
       with:
-        name: ArteCrit-Kernel-Clang22
+        name: 5.10-ArteXCrit-Clang22-LTO-Kernel
+        path: 5.10-ArteXCrit-Clang22-LTO-marble.zip
+
         path: ArteCrit-Clang22-marble.zip
         
