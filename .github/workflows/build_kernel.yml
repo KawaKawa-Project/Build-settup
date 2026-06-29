@@ -24,7 +24,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl
+        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl zip
 
     - name: Send TG Notification (Start)
       run: |
@@ -99,18 +99,42 @@ jobs:
         make O=out gki_defconfig
         make O=out -j$(nproc)
 
-    - name: Check Build & Upload Artifact
+    - name: Check Build & Package with AnyKernel3
       run: |
         if [ -f "kernel-src/out/arch/arm64/boot/Image" ]; then
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=✅ <b>BUILD SUKSES!</b>%0A📦 Kernel: ArteCrit-XClang-LTO" -d "parse_mode=html"
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=📦 <b>[ArteCrit Kernel]</b>%0ABuild sukses! Sedang mengemas kernel ke AnyKernel3 (init_boot GKI)..." -d "parse_mode=html"
+          
+          # Clone AnyKernel3 Resmi
+          git clone https://github.com/osm0sis/AnyKernel3.git AnyKernel
+          
+          # Masukkan file Image hasil compile ke folder AnyKernel
+          cp kernel-src/out/arch/arm64/boot/Image AnyKernel/
+          
+          # Modifikasi otomatis anykernel.sh untuk GKI POCO F5 (init_boot)
+          cd AnyKernel
+          sed -i 's/kernel.string=.*/kernel.string=ArteCrit-XClang-LTO/g' anykernel.sh
+          sed -i 's/block=boot;/block=init_boot;/g' anykernel.sh
+          sed -i 's/#dump_boot;/dump_boot;/g' anykernel.sh
+          sed -i 's/#write_boot;/write_boot;/g' anykernel.sh
+          
+          # Buat file zip flashable
+          zip -r9 "../ArteCrit-XClang-LTO-marble.zip" * -x .git* README.md
+          
         else
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=❌ <b>BUILD GAGAL!</b>" -d "parse_mode=html"
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" -d "chat_id=${{ env.TG_CHAT_ID }}" -d "text=❌ <b>BUILD GAGAL!</b>%0AProses kompilasi kernel mengalami error." -d "parse_mode=html"
           exit 1
         fi
 
-    - name: Upload Kernel Image
+    - name: Upload Flashable Kernel Zip
       uses: actions/upload-artifact@v4
       with:
-        name: ArteCrit-Kernel-Image
-        path: kernel-src/out/arch/arm64/boot/Image
+        name: ArteCrit-Kernel-Flashable
+        path: ArteCrit-XClang-LTO-marble.zip
+
+    - name: Send Final Telegram Notification
+      run: |
+        curl -s -X POST "https://api.telegram.org/bot${{ env.TG_TOKEN }}/sendMessage" \
+        -d "chat_id=${{ env.TG_CHAT_ID }}" \
+        -d "text=✅ <b>KERNEL ZIP SIAP DI-FLASH!</b>%0A%0A📦 <b>File:</b> ArteCrit-XClang-LTO-marble.zip%0A📱 <b>Device:</b> POCO F5 (marble)%0A🔥 <b>Features:</b> ReSukiSU + SUSFS%0A%0ASilakan unduh file zip langsung di halaman GitHub Actions repositori kamu." \
+        -d "parse_mode=html"
         
