@@ -24,7 +24,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl zip
+        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm lld clang git bc rsync ccache curl zip patch
 
     - name: Send TG Notification (Start)
       run: |
@@ -53,30 +53,25 @@ jobs:
       run: |
         cd kernel-src
         
-        # Patch ReSukiSU (KernelSU Reborn/Next Module)
+        # 1. Integrasi ReSukiSU (KernelSU Fork)
         mkdir -p drivers/kernelsu
         cp -r ../ReSukiSU/kernel/* drivers/kernelsu/
         if ! grep -q "CONFIG_KSU" drivers/Makefile; then
             echo "obj-\$(CONFIG_KSU) += kernelsu/" >> drivers/Makefile
         fi
         
-        # Patch SUSFS v5.10 (Mencari file patch secara fleksibel agar anti-error)
-        echo "Mencari dan menyalin patch SUSFS..."
-        find ../susfs4ksu/Kernel_Patches/ -type f -name "*5.10*.patch" -exec cp {} . \; 2>/dev/null || true
-        find ../susfs4ksu/Kernel_Patches/ -type f -name "*add_susfs*.patch" -exec cp {} . \; 2>/dev/null || true
-        find ../susfs4ksu/Kernel_Patches/ -type f -name "*ext4*.patch" -exec cp {} . \; 2>/dev/null || true
+        # 2. Patch SUSFS ke KernelSU (Sesuai Step 2 & 6 Dokumentasi SUSFS)
+        cp ../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch drivers/kernelsu/
+        cd drivers/kernelsu
+        patch -p1 < 10_enable_susfs_for_ksu.patch || echo "Gagal patch KSU, skip..."
+        cd ../..
         
-        # Aplikasikan semua patch .patch yang berhasil disalin
-        for patch in *.patch; do
-            if [ -f "$patch" ]; then
-                echo "Mengaplikasikan patch: $patch"
-                git apply "$patch" --whitespace=nowarn || echo "Gagal mengaplikasikan $patch, dilewati..."
-            fi
-        done
+        # 3. Patch SUSFS ke Main Kernel (Sesuai Step 3, 4, 5 & 7 Dokumentasi SUSFS)
+        cp ../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-5.10.patch .
+        patch -p1 < 50_add_susfs_in_kernel-5.10.patch || echo "Gagal patch kernel, skip..."
         
-        # Salin file driver utama SUSFS ke filesystem kernel
-        cp ../susfs4ksu/fs/susfs.c fs/ || echo "Gagal salin susfs.c"
-        cp ../susfs4ksu/include/linux/susfs.h include/linux/ || echo "Gagal salin susfs.h"
+        cp ../susfs4ksu/kernel_patches/fs/susfs.c fs/
+        cp ../susfs4ksu/kernel_patches/include/linux/susfs.h include/linux/
         
         # Custom Nama Kernel ke -ArteCrit-XClang-LTO
         sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-ArteCrit-XClang-LTO"/g' arch/arm64/configs/gki_defconfig
@@ -86,6 +81,7 @@ jobs:
 
 # ReSukiSU & SUSFS Configs
 CONFIG_KSU=y
+CONFIG_CONFIG_KSU_SUSFS=y
 CONFIG_SUSFS=y
 CONFIG_SUSFS_SHOW_SUS_PATH=y
 CONFIG_SUSFS_SUS_MOUNT=y
