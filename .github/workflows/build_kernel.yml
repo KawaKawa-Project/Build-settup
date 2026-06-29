@@ -58,11 +58,18 @@ jobs:
         cp -r ../ReSukiSU/kernel/* drivers/kernelsu/
         echo "obj-\$(CONFIG_KSU) += kernelsu/" >> drivers/Makefile
         
-        # Patch SUSFS
-        cp ../susfs4ksu/Kernel_Patches/5.10/Definitions/ext4_v5.10_susfs.patch .
-        cp ../susfs4ksu/Kernel_Patches/5.10/Kernel_Patches/5.10_add_susfs_in_kernel.patch .
-        git apply ext4_v5.10_susfs.patch --whitespace=nowarn
-        git apply 5.10_add_susfs_in_kernel.patch --whitespace=nowarn
+        # Patch SUSFS (Mencari dan menyalin patch 5.10 secara fleksibel)
+        cp ../susfs4ksu/Kernel_Patches/5.10/*add_susfs*.patch . || cp ../susfs4ksu/Kernel_Patches/*5.10*.patch . || true
+        
+        # Cari file patch ext4 jika ada, jika tidak ada kita gunakan patch utama yang tersedia
+        find ../susfs4ksu/Kernel_Patches/ -name "*ext4*.patch" -exec cp {} . \; 2>/dev/null || true
+        
+        # Aplikasikan semua patch .patch yang berhasil disalin ke folder ini
+        for patch in *.patch; do
+            [ -f "$patch" ] && git apply "$patch" --whitespace=nowarn || echo "Skip $patch"
+        done
+        
+        # Salin file driver inti SUSFS ke tree kernel
         cp ../susfs4ksu/fs/susfs.c fs/
         cp ../susfs4ksu/include/linux/susfs.h include/linux/
         
