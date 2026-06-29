@@ -52,14 +52,14 @@ jobs:
     - name: Customization Name & Tweak ThinLTO (Daily+)
       run: |
         cd kernel-src
-        # 1. Ganti nama lokal kernel
+        # 1. Ganti nama lokal kernel harian
         sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+"/g' arch/arm64/configs/gki_defconfig
         
         # 2. Set Thin LTO
         sed -i 's/CONFIG_LTO_CLANG_FULL=y/# CONFIG_LTO_CLANG_FULL is not set/g' arch/arm64/configs/gki_defconfig
         echo "CONFIG_LTO_CLANG_THIN=y" >> arch/arm64/configs/gki_defconfig
         
-        # 3. FIX UTAMA: Matikan Stack Protector yang bikin error '__stack_chk_guard' di Clang 22
+        # 3. Matikan perlindungan stack di level defconfig
         sed -i 's/CONFIG_STACKPROTECTOR=y/# CONFIG_STACKPROTECTOR is not set/g' arch/arm64/configs/gki_defconfig
         sed -i 's/CONFIG_STACKPROTECTOR_STRONG=y/# CONFIG_STACKPROTECTOR_STRONG is not set/g' arch/arm64/configs/gki_defconfig
         echo "CONFIG_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/gki_defconfig
@@ -82,11 +82,15 @@ jobs:
         export CLANG_TRIPLE=aarch64-linux-gnu-
         export CROSS_COMPILE=aarch64-linux-android-
         export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
-        export KCFLAGS="-Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
+        
+        # FIX TOTAL: Tambahkan bendera -fno-stack-protector langsung ke compiler flags biar Clang tidak mencari guard!
+        export KCFLAGS="-fno-stack-protector -Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
         
         make clean && make mrproper
         make O=out LLVM=1 LLVM_IAS=1 gki_defconfig
-        make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
+        
+        # Paksa matikan fungsi stack-protector pada argumen eksekusi make bulanan
+        make O=out LLVM=1 LLVM_IAS=1 CONFIG_STACKPROTECTOR=n CONFIG_STACKPROTECTOR_STRONG=n -j$(nproc)
 
     - name: Package with AnyKernel3
       run: |
