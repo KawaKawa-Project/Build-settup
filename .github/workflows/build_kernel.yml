@@ -29,17 +29,19 @@ jobs:
         
         # Download AOSP Clang 22 Resmi dari Google Prebuilts Git (seri r584948)
         mkdir -p toolchain/aosp-clang
+        curl -fLo toolchain/aosp-clang/clang-r584948.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r584948.tar.gz"
+        
+        # Ekstraksi dengan aman
         cd toolchain/aosp-clang
-        curl -LO https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r584948.tar.gz
         tar -xf clang-r584948.tar.gz && rm clang-r584948.tar.gz
         
-        # TRIK JITU: Paksa buat symlink linker langsung di dalam core folder toolchain
-        cd bin
-        ln -sf ld.lld aarch64-linux-android-ld
-        ln -sf ld.lld aarch64-linux-gnu-ld
+        # FIX AMAN: Buat symlink langsung menggunakan full path absolut tanpa perlu pindah direktori manual
+        mkdir -p bin
+        ln -sf ld.lld bin/aarch64-linux-android-ld
+        ln -sf ld.lld bin/aarch64-linux-gnu-ld
         cd ../..
         
-        # Download AOSP GCC Cross Compilers
+        # Download AOSP GCC Cross Compilers (Untuk binutils lama yang masih dibutuhkan kernel 5.10)
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b main --depth=1 gcc-64
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b main --depth=1 gcc-32
 
@@ -71,7 +73,7 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-android-
         export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
         
-        # Mengabaikan ketatnya regulasi sintaks baru pada kode lama
+        # JALUR AMAN: Memaksa Clang 22 agar mengabaikan error ketatnya regulasi sintaks baru pada kode lama
         export KCFLAGS="-Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
         
         # Bersihkan sisa objek lama
@@ -80,7 +82,7 @@ jobs:
         # Buat konfigurasi defconfig asli
         make O=out gki_defconfig
         
-        # Eksekusi kompilasi dengan bendera LLVM penuh
+        # Eksekusi kompilasi dengan bendera LLVM penuh sesuai standar Google
         make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
 
     - name: Package with AnyKernel3
