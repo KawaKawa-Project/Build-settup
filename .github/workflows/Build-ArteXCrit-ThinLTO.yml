@@ -25,7 +25,7 @@ jobs:
     - name: Send Tele - Build Started
       run: |
         TEXT="🚀 *ArteXCrit Kernel Build Started\!*
-        • *Varian:* Daily+ (Thin LTO)
+        • *Varian:* Daily\+ \(Thin LTO\)
         • *Compiler:* Clang 22
         • *Triggered by:* $GITHUB_ACTOR"
         curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
@@ -113,18 +113,19 @@ jobs:
           # Konfigurasi nama string teks kernel harian
           sed -i 's/kernel.string=.*/kernel.string=5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+/g' anykernel.sh
           
-          # Ubah variabel target partisi boot menjadi kapital penuh (BLOCK=boot; dan IS_SLOT_DEVICE=1;)
-          sed -i 's/block=.*/BLOCK=boot;/g' anykernel.sh
-          sed -i 's/is_slot_device=.*/IS_SLOT_DEVICE=1;/g' anykernel.sh
+          # FIX: Kembalikan ke huruf kecil murni bawaan osm0sis agar partisi terdeteksi lancar di TWRP/OrangeFox
+          sed -i 's/block=.*/block=boot;/g' anykernel.sh
+          sed -i 's/is_slot_device=.*/is_slot_device=1;/g' anykernel.sh
           
-          # Sinkronisasi pemanggilan variabel ramdisk ke huruf kapital $RAMDISK
-          sed -i 's/\$ramdisk/\$RAMDISK/g' anykernel.sh
+          # Kembalikan pemanggilan variabel ramdisk ke huruf kecil bawaan
+          sed -i 's/\$RAMDISK/\$ramdisk/g' anykernel.sh
           
           # Aktifkan penanganan dump_boot dan write_boot murni bawaan template
           sed -i 's/#dump_boot;/dump_boot;/g' anykernel.sh
           sed -i 's/#write_boot;/write_boot;/g' anykernel.sh
           
-          zip -r9 "../5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" * -x .git* README.md
+          # FIX: Ikat zip ke jalur direktori absolut workspace agar dibaca tepat di step pemanggilan kirim Telegram
+          zip -r9 "$GITHUB_WORKSPACE/5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" * -x .git* README.md
         else
           echo "Kompilasi gagal! Berkas Image tidak terbentuk."
           exit 1
@@ -139,8 +140,9 @@ jobs:
     - name: Send Tele - Build Success
       if: success()
       run: |
+        # FIX MARDOWNV2: Melakukan escape tanda titik (.) dan minus (-) agar server Telegram tidak menolak parsing data teks
         TEXT="✅ *ArteXCrit Kernel Build SUCCESS\!*
-        • *File:* \`5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip\`
+        • *File:* \`5\.10\-ArteXCrit\-Clang22\-ThinLTO\-KernelDaily\+\.zip\`
         • Varian ThinLTO berhasil dikompilasi dengan aman\."
         
         curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
@@ -148,8 +150,8 @@ jobs:
           -d "text=${TEXT}" \
           -d "parse_mode=MarkdownV2"
           
-        # Mengirimkan file installer .zip langsung ke target Channel Telegram tujuan kamu
-        curl -F chat_id="@archivenyamasagung" -F document=@"5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendDocument"
+        # FIX DIRECTORY PATH: Panggil data lokal zip menggunakan variabel absolut lingkungan kerja GitHub agar lolos dari exit code 26
+        curl -F chat_id="@archivenyamasagung" -F document=@"$GITHUB_WORKSPACE/5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendDocument"
 
     - name: Send Tele - Build Failed
       if: failure()
