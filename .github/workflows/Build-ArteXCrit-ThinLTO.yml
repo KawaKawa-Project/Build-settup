@@ -87,20 +87,40 @@ jobs:
         export KCFLAGS="-fno-stack-protector -Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
         
         make clean && make mrproper
+        
+        # Menghasilkan konfigurasi dasar dari gki_defconfig yang bersih
         make O=out LLVM=1 LLVM_IAS=1 gki_defconfig
         
-        # Paksa matikan fungsi stack-protector pada argumen eksekusi make bulanan
-        make O=out LLVM=1 LLVM_IAS=1 CONFIG_STACKPROTECTOR=n CONFIG_STACKPROTECTOR_STRONG=n -j$(nproc)
+        # Eksekusi kompilasi murni tanpa polusi argumen paksaan tambahan di baris akhir
+        make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
 
     - name: Package with AnyKernel3
       run: |
         if [ -f "kernel-src/out/arch/arm64/boot/Image" ]; then
           git clone https://github.com/osm0sis/AnyKernel3.git AnyKernel
+          
+          # Salin berkas Image asli & duplikat sebagai file 'kernel' demi kecocokan installer AOSP
           cp kernel-src/out/arch/arm64/boot/Image AnyKernel/
+          cp kernel-src/out/arch/arm64/boot/Image AnyKernel/kernel
           
           cd AnyKernel
+          # Set properti nama perangkat POCO F5 agar lolos verifikasi instalasi
+          sed -i 's/device.name1=.*/device.name1=marble/g' anykernel.sh
+          sed -i 's/device.name2=.*/device.name2=marblein/g' anykernel.sh
+          sed -i 's/device.name3=.*/device.name3=/g' anykernel.sh
+          sed -i 's/device.name4=.*/device.name4=/g' anykernel.sh
+          
+          # Konfigurasi nama string teks kernel harian
           sed -i 's/kernel.string=.*/kernel.string=5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+/g' anykernel.sh
-          sed -i 's/block=boot;/block=init_boot;/g' anykernel.sh
+          
+          # Ubah variabel target partisi boot menjadi kapital penuh (BLOCK=boot; dan IS_SLOT_DEVICE=1;)
+          sed -i 's/block=.*/BLOCK=boot;/g' anykernel.sh
+          sed -i 's/is_slot_device=.*/IS_SLOT_DEVICE=1;/g' anykernel.sh
+          
+          # Sinkronisasi pemanggilan variabel ramdisk ke huruf kapital $RAMDISK
+          sed -i 's/\$ramdisk/\$RAMDISK/g' anykernel.sh
+          
+          # Aktifkan penanganan dump_boot dan write_boot murni bawaan template
           sed -i 's/#dump_boot;/dump_boot;/g' anykernel.sh
           sed -i 's/#write_boot;/write_boot;/g' anykernel.sh
           
@@ -128,7 +148,8 @@ jobs:
           -d "text=${TEXT}" \
           -d "parse_mode=MarkdownV2"
           
-        curl -F chat_id="7127548846" -F document=@"5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendDocument"
+        # Mengirimkan file installer .zip langsung ke target Channel Telegram tujuan kamu
+        curl -F chat_id="@archivenyamasagung" -F document=@"5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendDocument"
 
     - name: Send Tele - Build Failed
       if: failure()
