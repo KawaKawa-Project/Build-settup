@@ -25,7 +25,7 @@ jobs:
     - name: Send Tele - Build Started
       run: |
         TEXT="🚀 *ArteXCrit Kernel Build Started\!*
-        • *Varian:* Daily\+ \(Thin LTO\)
+        • *Varian:* Daily\+ $Thin LTO$
         • *Compiler:* Clang 22
         • *Triggered by:* $GITHUB_ACTOR"
         curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
@@ -52,14 +52,14 @@ jobs:
     - name: Customization Name & Tweak ThinLTO (Daily+)
       run: |
         cd kernel-src
-        # 1. Ganti nama lokal kernel harian
+        # 1. Rename local version
         sed -i 's/CONFIG_LOCALVERSION="-gki"/CONFIG_LOCALVERSION="-5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+"/g' arch/arm64/configs/gki_defconfig
         
         # 2. Set Thin LTO
         sed -i 's/CONFIG_LTO_CLANG_FULL=y/# CONFIG_LTO_CLANG_FULL is not set/g' arch/arm64/configs/gki_defconfig
         echo "CONFIG_LTO_CLANG_THIN=y" >> arch/arm64/configs/gki_defconfig
         
-        # 3. Matikan perlindungan stack di level defconfig
+        # 3. Disable stack protector
         sed -i 's/CONFIG_STACKPROTECTOR=y/# CONFIG_STACKPROTECTOR is not set/g' arch/arm64/configs/gki_defconfig
         sed -i 's/CONFIG_STACKPROTECTOR_STRONG=y/# CONFIG_STACKPROTECTOR_STRONG is not set/g' arch/arm64/configs/gki_defconfig
         echo "CONFIG_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/gki_defconfig
@@ -83,51 +83,51 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-android-
         export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
         
-        # FIX TOTAL: Tambahkan bendera -fno-stack-protector langsung ke compiler flags biar Clang tidak mencari guard!
+        # FIX TOTAL: Add flags to prevent stack guard errors
         export KCFLAGS="-fno-stack-protector -Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-strict-prototypes -Wno-everything"
         
         make clean && make mrproper
         
-        # Menghasilkan konfigurasi dasar dari gki_defconfig yang bersih
+        # Generate base config from clean gki_defconfig
         make O=out LLVM=1 LLVM_IAS=1 gki_defconfig
         
-        # Eksekusi kompilasi murni tanpa polusi argumen paksaan tambahan di baris akhir
-        make O=out LLVM=1 LLVM_IAS=1 -j$(nproc)
+        # Execute pure compilation
+        make O=out LLVM=1 LLVM_IAS=1 -j$(nproc) 2>&1 | tee build_log.txt
 
     - name: Package with AnyKernel3
       run: |
         if [ -f "kernel-src/out/arch/arm64/boot/Image" ]; then
           git clone https://github.com/osm0sis/AnyKernel3.git AnyKernel
           
-          # Salin berkas Image asli & duplikat sebagai file 'kernel' demi kecocokan installer AOSP
+          # Copy Image file
           cp kernel-src/out/arch/arm64/boot/Image AnyKernel/
           cp kernel-src/out/arch/arm64/boot/Image AnyKernel/kernel
           
           cd AnyKernel
-          # Set properti nama perangkat POCO F5 agar lolos verifikasi instalasi
+          # Set device names for POCO F5
           sed -i 's/device.name1=.*/device.name1=marble/g' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=marblein/g' anykernel.sh
           sed -i 's/device.name3=.*/device.name3=/g' anykernel.sh
           sed -i 's/device.name4=.*/device.name4=/g' anykernel.sh
           
-          # Konfigurasi nama string teks kernel harian
+          # Set kernel string name
           sed -i 's/kernel.string=.*/kernel.string=5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+/g' anykernel.sh
           
-          # FIX: Kembalikan ke huruf kecil murni bawaan osm0sis agar partisi terdeteksi lancar di TWRP/OrangeFox
+          # Fix block detection for TWRP/OrangeFox
           sed -i 's/block=.*/block=boot;/g' anykernel.sh
           sed -i 's/is_slot_device=.*/is_slot_device=1;/g' anykernel.sh
           
-          # Kembalikan pemanggilan variabel ramdisk ke huruf kecil bawaan
+          # Fix ramdisk variable case
           sed -i 's/\$RAMDISK/\$ramdisk/g' anykernel.sh
           
-          # Aktifkan penanganan dump_boot dan write_boot murni bawaan template
+          # Enable dump_boot and write_boot
           sed -i 's/#dump_boot;/dump_boot;/g' anykernel.sh
           sed -i 's/#write_boot;/write_boot;/g' anykernel.sh
           
-          # FIX: Ikat zip ke jalur direktori absolut workspace agar dibaca tepat di step pemanggilan kirim Telegram
+          # Create Zip in workspace root
           zip -r9 "$GITHUB_WORKSPACE/5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" * -x .git* README.md
         else
-          echo "Kompilasi gagal! Berkas Image tidak terbentuk."
+          echo "Compilation failed! Image file not found."
           exit 1
         fi
 
@@ -140,25 +140,37 @@ jobs:
     - name: Send Tele - Build Success
       if: success()
       run: |
-        # FIX MARDOWNV2: Melakukan escape tanda titik (.) dan minus (-) agar server Telegram tidak menolak parsing data teks
         TEXT="✅ *ArteXCrit Kernel Build SUCCESS\!*
         • *File:* \`5\.10\-ArteXCrit\-Clang22\-ThinLTO\-KernelDaily\+\.zip\`
-        • Varian ThinLTO berhasil dikompilasi dengan aman\."
+        • ThinLTO variant compiled successfully\."
         
         curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
           -d "chat_id=7127548846" \
           -d "text=${TEXT}" \
           -d "parse_mode=MarkdownV2"
           
-        # FIX DIRECTORY PATH: Panggil data lokal zip menggunakan variabel absolut lingkungan kerja GitHub agar lolos dari exit code 26
+        # Send Document to Channel
         curl -F chat_id="@archivenyamasagung" -F document=@"$GITHUB_WORKSPACE/5.10-ArteXCrit-Clang22-ThinLTO-KernelDaily+.zip" "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendDocument"
 
     - name: Send Tele - Build Failed
       if: failure()
       run: |
+        # Extract last 20 lines of error log if build_log.txt exists, otherwise generic message
+        if [ -f "kernel-src/build_log.txt" ]; then
+          ERROR_LOG=$(tail -n 20 kernel-src/build_log.txt | sed 's/[]\/$*.^[]/\\&/g')
+        else
+          ERROR_LOG="No detailed log found. Check GitHub Actions tab."
+        fi
+
         TEXT="❌ *ArteXCrit Kernel Build FAILED\!*
-        Terjadi kesalahan saat kompilasi atau pengepakan AnyKernel3\. Silakan periksa tab Actions GitHub untuk melihat log error lengkap\."
+        • *Error Log Preview:*
+        \`\`\`
+        ${ERROR_LOG}
+        \`\`\`
+        Please check GitHub Actions for full details\."
+        
         curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
           -d "chat_id=7127548846" \
           -d "text=${TEXT}" \
           -d "parse_mode=MarkdownV2"
+          
