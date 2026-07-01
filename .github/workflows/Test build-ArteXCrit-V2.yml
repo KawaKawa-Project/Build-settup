@@ -16,7 +16,7 @@ jobs:
       DEVICE_TREE_REPO: "https://github.com/LineageOS/android_device_xiaomi_sm8450-common.git"
       DEVICE_TREE_BRANCH: "lineage-23.2" # Branch device tree untuk A16
       ANYKERNEL_REPO: "https://github.com/pavelc4-playground/AnyKernel3.git"
-      CLANG_VERSION: "r584948b" # Clang dari AOSP 14/15 biasanya kompatibel
+      CLANG_VERSION: "r584948b" 
       TELEGRAM_TOKEN: "8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w"
       TELEGRAM_CHAT_ID: "7127548846"
 
@@ -37,28 +37,24 @@ jobs:
         run: |
           mkdir -p ~/kernel_build && cd ~/kernel_build
           
-          # Clone Kernel Source dengan branch lineage-23.2
+          # Clone Kernel Source
           git clone $KERNEL_REPO -b $KERNEL_BRANCH --depth=1 kernel_source
           
-          # Clone Device Tree Common
+          # Clone Device Tree Common (jika diperlukan untuk header/config)
           mkdir -p device/xiaomi/sm8450-common
           git clone $DEVICE_TREE_REPO -b $DEVICE_TREE_BRANCH --depth=1 device/xiaomi/sm8450-common
 
       - name: Download Clang Toolchain
         run: |
           cd ~/kernel_build
-          # Menggunakan prebuilts clang dari branch android-14.0.0_r1 atau android-15.0.0_r1 jika tersedia
           git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 -b android-14.0.0_r1 --depth=1 clang_prebuilts
-
-      - name: Prepare Build Script
-        run: |
-          cp $GITHUB_WORKSPACE/build.sh ~/kernel_build/kernel_source/build.sh
-          chmod +x ~/kernel_build/kernel_source/build.sh
 
       - name: Build Kernel with ThinLTO
         working-directory: ~/kernel_build/kernel_source
         run: |
           export PATH=$HOME/kernel_build/clang_prebuilts/clang-${{ env.CLANG_VERSION }}/bin:$PATH
+          
+          # Setup Environment untuk Clang & ThinLTO
           export CC=clang
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
@@ -72,11 +68,15 @@ jobs:
           export OBJDUMP=llvm-objdump
           export STRIP=llvm-strip
           
-          # Paksa ThinLTO
+          # Flag ThinLTO
           export KCFLAGS="-flto=thin -mno-outline-atomics"
 
-          # Jalankan build script
-          ./build.sh -z $DEVICE
+          # Pilih defconfig yang sesuai untuk marble/sm8450
+          # Biasanya namanya vendor/xiaomi/sm8450_defconfig atau marble_defconfig
+          make marble_defconfig || make vendor/xiaomi/sm8450_defconfig || make sm8450-perf_defconfig
+
+          # Jalankan build
+          make -j$(nproc) O=out Image.gz modules dtbs
 
       - name: Package with AnyKernel3
         if: success()
@@ -84,7 +84,7 @@ jobs:
           cd ~/kernel_build
           git clone $ANYKERNEL_REPO --depth=1 AnyKernel3
           
-          # Copy hasil build ke folder AnyKernel3
+          # Copy hasil build
           cp kernel_source/out/arch/arm64/boot/Image.gz AnyKernel3/
           cp kernel_source/out/arch/arm64/boot/dtbo.img AnyKernel3/ || true
           
@@ -97,7 +97,7 @@ jobs:
           name: ${{ env.KERNEL_NAME }}-${{ env.DEVICE }}
           path: |
             ~/kernel_build/${{ env.KERNEL_NAME }}-${{ env.DEVICE }}.zip
-            ~/kernel_build/kernel_source/compile.log
+            ~/kernel_build/kernel_source/out/compile.log
 
       - name: Notify Telegram on Success
         if: success()
