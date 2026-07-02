@@ -1,0 +1,100 @@
+name: Generate ArteXCrit Marble Defconfig
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses5-dev gawk flex bison openssl libssl-dev llvm lld clang git bc rsync ccache curl python3 device-tree-compiler
+
+    - name: Send Tele - Config Gen Started
+      run: |
+        TEXT="️ *Defconfig Generator Started\!*
+        • *Target:* POCO F5 $Marble$
+        • *Triggered by:* $GITHUB_ACTOR"
+        curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
+          -d "chat_id=7127548846" \
+          -d "text=${TEXT}" \
+          -d "parse_mode=MarkdownV2"
+
+    - name: Clone Kernel Source & Toolchain
+      run: |
+        git clone https://github.com/LineageOS/android_kernel_xiaomi_sm8450.git -b lineage-23.2 kernel-src
+        
+        mkdir -p toolchain/aosp-clang
+        cd toolchain/aosp-clang
+        curl -LO https://github.com/AbuRider/scripts/releases/download/20260502/clang-r596125.tar.gz
+        tar -xf clang-r596125.tar.gz && rm clang-r596125.tar.gz
+        mkdir -p bin
+        ln -sf ld.lld bin/aarch64-linux-android-ld
+        ln -sf ld.lld bin/aarch64-linux-gnu-ld
+        cd ../..
+
+    - name: Generate & Tweak Defconfig
+      run: |
+        cd kernel-src
+        export ARCH=arm64 SUBARCH=arm64
+        export PATH="$GITHUB_WORKSPACE/toolchain/aosp-clang/bin:$PATH"
+        export CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_COMPAT=arm-linux-androideabi-
+        
+        # 1. Generate base GKI config
+        make O=out LLVM=1 LLVM_IAS=1 gki_defconfig
+        
+        # 2. Merge vendor configs (waipio + marble specific)
+        make O=out LLVM=1 LLVM_IAS=1 scripts/kconfig/merge_config.sh \
+            out/.config \
+            vendor/waipio_GKI.config \
+            vendor/debugfs.config \
+            vendor/addon.config \
+            vendor/marble_GKI.config
+            
+        # 3. Apply custom tweaks via scripts/config
+        scripts/config --file out/.config --set-str CONFIG_LOCALVERSION "-5.10.xxx-ArteXCrit-Clang22-ThinLTO-Daily+"
+        scripts/config --file out/.config -e CONFIG_LTO_CLANG_THIN
+        scripts/config --file out/.config -d CONFIG_LTO_CLANG_FULL
+        scripts/config --file out/.config -d CONFIG_STACKPROTECTOR
+        scripts/config --file out/.config -d CONFIG_STACKPROTECTOR_STRONG
+        scripts/config --file out/.config -e CONFIG_STACKPROTECTOR_NONE
+        
+        # 4. Copy hasil final ke folder output root
+        cp out/.config $GITHUB_WORKSPACE/artexcrit_marble_defconfig
+
+    - name: Upload Defconfig Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: artexcrit_marble_defconfig
+        path: artexcrit_marble_defconfig
+        retention-days: 7
+
+    - name: Send Tele - Config Gen Success
+      if: success()
+      run: |
+        TEXT="✅ *Defconfig Generator SUCCESS\!*
+        • *File:* \`artexcrit\_marble\_defconfig\`
+        • Ready to push to \`configs/\` folder\."
+        
+        curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
+          -d "chat_id=7127548846" \
+          -d "text=${TEXT}" \
+          -d "parse_mode=MarkdownV2"
+
+    - name: Send Tele - Config Gen Failed
+      if: failure()
+      run: |
+        TEXT="❌ *Defconfig Generator FAILED\!*
+        • Please check GitHub Actions logs for details\."
+        
+        curl -s -X POST "https://api.telegram.org/bot8912165324:AAFzwMIB-kea9ICh5l3XKbd4E-6To2Dou9w/sendMessage" \
+          -d "chat_id=7127548846" \
+          -d "text=${TEXT}" \
+          -d "parse_mode=MarkdownV2"
+          
