@@ -9,7 +9,7 @@ MAINTAINER_NAME="OKawaKawa"
 WITH_GAPPS=false
 TARGET_DEVICE="marble"
 BUILD_DIR="BUILD"
-TARGET_RELEASE="ap4" # Codename Android 16 (VanillaIceCream) - SESUAIKAN JIKA PERLU
+TARGET_RELEASE="ap4" # Codename Android 16 (VanillaIceCream)
 
 # --- FUNGSI NOTIFIKASI TELEGRAM ---
 send_telegram() {
@@ -24,7 +24,7 @@ send_telegram() {
 handle_exit() {
     local exit_code=$?
     if [ $exit_code -ne 0 ]; then
-        send_telegram " *Build Gagal!* \nError code: $exit_code. \nCek log terminal Crave."
+        send_telegram "❌ *Build Gagal!* \nError code: $exit_code. \nCek log terminal Crave."
     else
         send_telegram "✅ *Build Berhasil!* \nMaintainer: $MAINTAINER_NAME"
     fi
@@ -37,7 +37,7 @@ handle_exit() {
 trap handle_exit EXIT
 
 echo "🚀 Memulai Build Infinity X ($TARGET_DEVICE)..."
-send_telegram " *Memulai Build* \nTarget: $TARGET_DEVICE \nMaintainer: $MAINTAINER_NAME"
+send_telegram "🚀 *Memulai Build* \nTarget: $TARGET_DEVICE \nMaintainer: $MAINTAINER_NAME"
 
 # 1. Persiapan Folder Build
 mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
@@ -51,28 +51,35 @@ repo init --depth=1 --no-repo-verify --git-lfs \
 # 3. Clone Manifest Lokal
 git clone -b infinity https://github.com/aosp-pablo/device_manifest.git .repo/local_manifests
 
-# 4. Sync Source Code (MENGGUNAKAN repo sync STANDAR)
-send_telegram "⏳ *Sedang Sync Source Code...* \nMohon tunggu."
-repo sync --force-sync --current-branch --no-clone-bundle --no-tags -j$(nproc --all)
+# 4. Sinkronisasi Source Code (DIPERBAIKI UNTUK ATASI ERROR CHECKOUT)
+send_telegram "⏳ *Sedang Sync Source Code...* \nMohon tunggu, sedang memaksa overwrite perubahan lokal..."
+
+# Hapus manual folder clang yang sering konflik
+rm -rf prebuilts/clang/host/linux-x86
+
+# Jalankan repo sync dengan flag force-sync
+repo sync --force-sync --current-branch --no-clone-bundle --no-tags -j$(nproc --all) || {
+    echo "Sync paralel gagal, mencoba lagi dengan single thread..."
+    repo sync --force-sync -j1 --fail-fast
+}
 
 # 5. Setup Environment
 export INFINITY_MAINTAINER="$MAINTAINER_NAME"
 export WITH_GAPPS=$WITH_GAPPS
-export TARGET_RELEASE="$TARGET_RELEASE" # WAJIB UNTUK ANDROID 16
+export TARGET_RELEASE="$TARGET_RELEASE"
 
 source build/envsetup.sh
 
-# 6. Lunch Target (dengan fallback jika nama salah)
+# 6. Lunch Target (dengan fallback otomatis)
 LUNCH_TARGET="infinity_${TARGET_DEVICE}-user"
 if ! lunch "$LUNCH_TARGET" &>/dev/null; then
-    echo "⚠️ Lunch '$LUNCH_TARGET' gagal. Mencoba alternatif..."
-    # Coba cari lunch combo yang mengandung 'marble'
+    echo "⚠️ Lunch '$LUNCH_TARGET' gagal. Mencari alternatif..."
     AVAILABLE=$(lunch 2>&1 | grep -i marble | head -1 | awk '{print $2}' | tr -d '.')
     if [ -n "$AVAILABLE" ]; then
         echo "✅ Menemukan alternatif: $AVAILABLE"
         lunch "$AVAILABLE"
     else
-        send_telegram " *Lunch Gagal!* \nTidak ditemukan lunch combo untuk $TARGET_DEVICE."
+        send_telegram "❌ *Lunch Gagal!* \nTidak ditemukan combo untuk $TARGET_DEVICE."
         exit 1
     fi
 else
