@@ -8,7 +8,6 @@ TARGET_SEND="7127548846"
 MAINTAINER_NAME="OKawaKawa" # Ganti dengan nama kamu
 WITH_GAPPS=false            # true jika ingin include Google Apps, false jika ingin vanilla AOSP
 TARGET_DEVICE="marble"     # Codename untuk POCO F5 / Redmi Note 12 Turbo
-BUILD_DIR="BUILD"          # Nama folder tempat semua proses berlangsung
 
 # --- FUNGSI NOTIFIKASI TELEGRAM ---
 send_telegram() {
@@ -47,42 +46,29 @@ echo "=================================================="
 # Kirim notifikasi awal
 send_telegram "🚀 *Memulai Build* \nTarget: Infinity X ($TARGET_DEVICE) \nMaintainer: $MAINTAINER_NAME \nStatus: Sedang menyiapkan environment..."
 
-# 1. Persiapan Folder BUILD
-echo "[1/7] Menyiapkan direktori kerja di dalam folder $BUILD_DIR..."
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
+# Remove source code before
+rm -rf .repo/local_manifests
 
-# 2. Persiapan Manifest Lokal
-echo "[2/7] Menyiapkan direktori local_manifests..."
-mkdir -p .repo/local_manifests
+# 1. init source
+repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16 -g default,-mips,-darwin,-notdefault
 
 # 3. Clone Repository Manifest
-echo "[3/7] Mengambil instruksi build dari aosp-pablo..."
-if [ ! -d ".repo/local_manifests/device_manifest" ]; then
-    git clone -b infinity https://github.com/aosp-pablo/device_manifest.git .repo/local_manifests
-else
-    echo "Manifest sudah ada, melakukan update..."
-    cd .repo/local_manifests && git pull && cd ../..
-fi
+git clone -b infinity https://github.com/aosp-pablo/device_manifest.git .repo/local_manifests
 
 # 4. Sinkronisasi Source Code
-echo "[4/7] Sinkronisasi source code (AOSP + Vendor + Kernel + DT)..."
-send_telegram "⏳ *Sedang Sync Source Code...* \nMohon tunggu, proses ini memakan waktu lama."
-repo sync --force-sync --current-branch --no-clone-bundle --no-tags -j$(nproc --all)
+lsend_telegram "⏳ *Sedang Sync Source Code...* \Mohon tunggu, proses ini memakan waktu lama."
+/opt/crave/sync.sh # crave repo sync
 
 # 5. Setup Environment & Konfigurasi
-echo "[5/7] Mengatur environment build..."
 export INFINITY_MAINTAINER="$MAINTAINER_NAME"
 export WITH_GAPPS=$WITH_GAPPS
 
-source build/envsetup.sh
+. build/envsetup.sh
 
 # 6. Lunch Target
-echo "[6/7] Memilih target perangkat: infinity_${TARGET_DEVICE}-user..."
 lunch infinity_${TARGET_DEVICE}-user
 
 # 7. Mulai Kompilasi
-echo "[7/7] Memulai kompilasi 'm bacon'..."
 send_telegram "🔨 *Kompilasi Dimulai* \nSedang memproses file... Mohon bersabar."
 m bacon
 
