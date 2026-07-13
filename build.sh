@@ -8,8 +8,7 @@ TARGET_SEND="7127548846"
 MAINTAINER_NAME="OKawaKawa"
 WITH_GAPPS=false
 TARGET_DEVICE="marble"
-BUILD_DIR="BUILD"
-TARGET_RELEASE="ap4"
+TARGET_RELEASE="ap4" # Codename Android 16 VanillaIceCream
 
 # --- FUNGSI NOTIFIKASI TELEGRAM ---
 send_telegram() {
@@ -20,6 +19,7 @@ send_telegram() {
         -d parse_mode="Markdown" > /dev/null
 }
 
+# Fungsi cleanup & notifikasi akhir
 handle_exit() {
     local exit_code=$?
     if [ $exit_code -ne 0 ]; then
@@ -28,44 +28,44 @@ handle_exit() {
         send_telegram "✅ *Build Berhasil!* \nMaintainer: $MAINTAINER_NAME"
     fi
     
-    echo "[CLEANUP] Menghapus folder $BUILD_DIR..."
-    rm -rf "$BUILD_DIR"
+    echo "[CLEANUP] Menghapus sisa-sisa proses..."
+    # Hapus folder .repo dan out setelah selesai untuk hemat storage Crave
+    rm -rf .repo out
     exit $exit_code
 }
 
 trap handle_exit EXIT
 
-echo "🚀 Memulai Build Infinity X ($TARGET_DEVICE)..."
+echo " Membersihkan seluruh isi folder sebelum build dimulai..."
+# HAPUS TOTAL SEMUA ISI FOLDER SAAT INI
+rm -rf * .[!.]* ..?* 2>/dev/null || true
+
+echo "🚀 Memulai Build Project Infinity X ($TARGET_DEVICE)..."
 send_telegram "🚀 *Memulai Build* \nTarget: $TARGET_DEVICE \nMaintainer: $MAINTAINER_NAME"
 
-# 1. Setup Folder Build
-mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
-
-# 2. Inisialisasi Repo
-rm -rf .repo/local_manifests
+# 1. Inisialisasi Source Code Android 16
 repo init --depth=1 --no-repo-verify --git-lfs \
     -u https://github.com/ProjectInfinity-X/manifest \
     -b 16
 
-# 3. Clone Manifest Lokal
+# 2. Clone Manifest Lokal untuk Device Tree & Vendor Tree
+mkdir -p .repo/local_manifests
 git clone -b infinity https://github.com/aosp-pablo/device_manifest.git .repo/local_manifests
 
-# 4. HAPUS MANUAL FOLDER CLANG YANG BERMASALAH (INI YANG PALING PENTING!)
-echo "🧹 Membersihkan folder clang yang bermasalah..."
-rm -rf prebuilts/clang/host/linux-x86
-
-# 5. Jalankan repo sync dengan force-sync
+# 3. Sinkronisasi Source Code
 send_telegram "⏳ *Sedang Sync Source Code...* \nMohon tunggu."
+# Hapus manual folder clang yang sering konflik di Crave
+rm -rf prebuilts/clang/host/linux-x86
 repo sync --force-sync --current-branch --no-clone-bundle --no-tags -j$(nproc --all)
 
-# 6. Setup Environment
+# 4. Setup Environment & Variabel Maintainer
 export INFINITY_MAINTAINER="$MAINTAINER_NAME"
 export WITH_GAPPS=$WITH_GAPPS
 export TARGET_RELEASE="$TARGET_RELEASE"
 
 source build/envsetup.sh
 
-# 7. Lunch Target dengan Fallback
+# 5. Lunch Target dengan Fallback Otomatis
 LUNCH_TARGET="infinity_${TARGET_DEVICE}-user"
 if ! lunch "$LUNCH_TARGET" &>/dev/null; then
     echo "⚠️ Lunch '$LUNCH_TARGET' gagal. Mencari alternatif..."
@@ -81,6 +81,6 @@ else
     lunch "$LUNCH_TARGET"
 fi
 
-# 8. Mulai Kompilasi
+# 6. Mulai Kompilasi
 send_telegram "🔨 *Kompilasi Dimulai* \nMaintainer: $MAINTAINER_NAME"
 m bacon
