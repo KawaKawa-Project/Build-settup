@@ -29,6 +29,8 @@ handle_exit() {
 
 trap handle_exit EXIT
 
+rm -rf .repo/local_manifests
+
 repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16
 
 git clone -b main https://github.com/KawaKawa-Project/local_manifest.git .repo/local_manifests
