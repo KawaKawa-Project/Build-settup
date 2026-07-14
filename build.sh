@@ -6,7 +6,6 @@ TARGET_SEND="7127548846"
 MAINTAINER_NAME="OKawaKawa"
 WITH_GAPPS=false
 TARGET_DEVICE="marble"
-BUILD_DIR="BUILD"
 TARGET_RELEASE="ap4"
 
 export _JAVA_OPTIONS="-Xmx2g -Xms512m"
@@ -24,15 +23,12 @@ handle_exit() {
     if [ $exit_code -ne 0 ]; then
         send_telegram "❌ Gagal ($exit_code)"
     else
-        send_telegram "✅ Sukses"
+        send_telegram "✅ Setup Selesai"
     fi
-    rm -rf "$BUILD_DIR"
     exit $exit_code
 }
 
 trap handle_exit EXIT
-
-cd "$BUILD_DIR" || exit 1
 
 [ ! -d ".repo" ] && repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16
 
@@ -52,6 +48,3 @@ if ! lunch "$LUNCH_TARGET" &>/dev/null; then
 else
     lunch "$LUNCH_TARGET"
 fi
-
-send_telegram "🔨 Build (-j2)"
-m -j2 bacon
