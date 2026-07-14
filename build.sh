@@ -6,7 +6,6 @@ TARGET_SEND="7127548846"
 MAINTAINER_NAME="OKawaKawa"
 WITH_GAPPS=false
 TARGET_DEVICE="marble"
-TARGET_RELEASE="ap4"
 
 export _JAVA_OPTIONS="-Xmx2g -Xms512m"
 export ANDROID_JACK_VM_ARGS="-Xmx2g"
@@ -30,15 +29,14 @@ handle_exit() {
 
 trap handle_exit EXIT
 
-[ ! -d ".repo" ] && repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16
+repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16
 
-mkdir -p .repo/local_manifests
-[ -d ".repo/local_manifests/.git" ] && (cd .repo/local_manifests && git pull && cd ../..) || git clone -b infinity https://github.com/aosp-pablo/device_manifest.git .repo/local_manifests
+git clone -b main https://github.com/KawaKawa-Project/local_manifest.git .repo/local_manifests
 
 send_telegram "🔄 Sync"
 /opt/crave/resync.sh
 
-export INFINITY_MAINTAINER="$MAINTAINER_NAME" WITH_GAPPS=$WITH_GAPPS TARGET_RELEASE="$TARGET_RELEASE"
+export INFINITY_MAINTAINER="$MAINTAINER_NAME" WITH_GAPPS=$WITH_GAPPS
 source build/envsetup.sh
 
 LUNCH_TARGET="infinity_${TARGET_DEVICE}-user"
@@ -48,3 +46,4 @@ if ! lunch "$LUNCH_TARGET" &>/dev/null; then
 else
     lunch "$LUNCH_TARGET"
 fi
+mka bacon
