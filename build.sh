@@ -46,4 +46,5 @@ if ! lunch "$LUNCH_TARGET" &>/dev/null; then
 else
     lunch "$LUNCH_TARGET"
 fi
+make installclean
 mka bacon
