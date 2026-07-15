@@ -85,3 +85,7 @@ mka bacon -j$(nproc --all)
 
 # Jika sampai sini berarti sukses (karena trap handle_exit akan menangani jika gagal)
 send_telegram "✨ Proses build selesai!"
+
+# pull out hasil build di /infi/marble
+crave pull out/target/product/*/*zip
+send_telegram "hasil build ada di /marble silahkan cek"
