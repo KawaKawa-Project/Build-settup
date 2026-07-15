@@ -1,7 +1,15 @@
 #!/bin/bash
 
-TOKEN="8912165324:AAGFkpDPjQU5ZFlzgW1QvTjjrzj22Z2cgsA"
-TARGET_SEND="7127548846"
+# Load credentials from environment variables
+# Set these before running: export TOKEN="..." and export TARGET_SEND="..."
+TOKEN="${TOKEN:-}"
+TARGET_SEND="${TARGET_SEND:-}"
+
+# Validate required credentials
+if [ -z "$TOKEN" ] || [ -z "$TARGET_SEND" ]; then
+    echo "Error: TOKEN and TARGET_SEND environment variables must be set"
+    exit 1
+fi
 
 MAINTAINER_NAME="OKawaKawa"
 WITH_GAPPS=false
