@@ -11,8 +11,6 @@ if [ -z "$TOKEN" ] || [ -z "$TARGET_SEND" ]; then
     exit 1
 fi
 
-MAINTAINER_NAME="OKawaKawa"
-WITH_GAPPS=false
 TARGET_DEVICE="marble"
 
 export _JAVA_OPTIONS="-Xmx2g -Xms512m"
@@ -46,7 +44,6 @@ git clone -b main https://github.com/KawaKawa-Project/local_manifest.git .repo/l
 send_telegram "🔄 Sync"
 /opt/crave/resync.sh
 
-export INFINITY_MAINTAINER="$MAINTAINER_NAME" WITH_GAPPS=$WITH_GAPPS
 source build/envsetup.sh
 
 LUNCH_TARGET="infinity_${TARGET_DEVICE}-user"
