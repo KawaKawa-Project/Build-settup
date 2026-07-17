@@ -63,7 +63,7 @@ source build/envsetup.sh
 
 # 7. Lunch Target
 # Pastikan nama lunch target sesuai dengan yang ada di device tree kamu (cek di .mk)
-LUNCH_TARGET="infinity_marble-user"
+LUNCH_TARGET="infinity_marble"
 send_telegram "🍽️ Lancing $LUNCH_TARGET..."
 lunch $LUNCH_TARGET
 
