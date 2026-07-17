@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Load credentials from environment variables
-TOKEN="${TOKEN_TELE:-${TOKEN:-}}"
-TARGET_SEND="${TARGET_SEND:-}"
+# Load credentials directly (NOT RECOMMENDED for production/public repos)
+TOKEN="8912165324:AAGY6XR68Bi16HJ9HLze6vywIHeGb8YKHBc"
+TARGET_SEND="7127548846"
 
 # Validate required credentials
 if [ -z "$TOKEN" ] || [ -z "$TARGET_SEND" ]; then
+    echo "Error: Credentials missing"
     exit 1
 fi
 
