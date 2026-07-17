@@ -2,8 +2,8 @@
 
 # Load credentials from environment variables (Recommended)
 # Jika dijalankan di Crave, pastikan variabel ini diset di Secrets/Env Vars
-TOKEN=8912165324:AAH4Yi7SE8vc-GKzWofJcKoSPWlUQWmSruY
-TARGET_SEND=7127548846
+TOKEN="8912165324:AAH4Yi7SE8vc-GKzWofJcKoSPWlUQWmSruY"
+TARGET_SEND="7127548846"
 
 if [ -z "$TOKEN" ] || [ -z "$TARGET_SEND" ]; then
     echo "Error: Token or Chat ID missing."
