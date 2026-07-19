@@ -4,8 +4,7 @@
 repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs
 
 # 1,5 add local manifest
-mkdir -p .repo/local_manifests
-curl -s https://raw.githubusercontent.com/KawaKawa-Project/Build-settup/refs/heads/Lunaris-16.2/Lunaris_local_manifest.xml -o .repo/local_manifests/marble.xml
+git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_local_manifest .repo/local_manifests
 
 # 2. Sync ROM
 /opt/crave/resync.sh
