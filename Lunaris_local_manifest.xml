@@ -19,7 +19,6 @@
     <project path="vendor/xiaomi/miuicamera-marble" name="vendor_xiaomi_miuicamera-marble_by_aosp_pablo" remote="kawakawa" revision="16" depth="1" />
 
     <!-- Hardware -->
-    <remove-project name="android_hardware_xiaomi" />
     <project path="hardware/xiaomi" name="android_hardware_xiaomi_by_aosp_pablo" remote="kawakawa" revision="lineage-23.0" />
 
     <!-- Dolby -->
