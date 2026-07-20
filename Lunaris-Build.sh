@@ -15,11 +15,3 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 # lunch
 lunch lineage_marble-bp4a-userdebug
 m bacon
-
-# 4. Upload to Gofile 
-if [ -f out/target/product/marble/*202607*.zip ]; then
-  wget https://raw.githubusercontent.com/lordgaruda/GoFile-Upload/refs/heads/master/upload.sh
-  chmod +x upload.sh ; ./upload.sh out/target/product/marble/*202607*.zip
-else
-  echo "zip not found out/target/product/marble/"
-fi
