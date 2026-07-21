@@ -18,4 +18,5 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 
 # lunch
 lunch lineage_marble-bp4a-userdebug
+make installclean
 m bacon
