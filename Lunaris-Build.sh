@@ -2,7 +2,6 @@
 
 #Clean
 rm -rf .repo/local_manifests
-rm -rf device/xiaomi/marble
 
 # 1. Initial ROM source
 repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs --depth=1
@@ -18,5 +17,4 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 
 # lunch
 lunch lineage_marble-bp4a-userdebug
-make installclean
 m bacon
