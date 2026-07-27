@@ -15,6 +15,14 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 # 3. Start the build ROM
 . build/envsetup.sh
 
-# lunch
+# 4. lunch
 lunch lineage_marble-bp4a-userdebug
 m bacon
+
+# 5. upload to gofile
+crave pull out/target/product/*/*zip
+cd marble # marble = your phone code name 
+wget https://raw.githubusercontent.com/lordgaruda/GoFile-Upload/refs/heads/master/upload.sh
+chmod +x upload.sh
+./upload.sh *.zip*
+rm *.zip*
