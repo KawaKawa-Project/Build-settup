@@ -20,9 +20,16 @@ lunch lineage_marble-bp4a-userdebug
 m bacon
 
 # 5. upload to gofile
-crave pull out/target/product/*/*zip
-cd marble # marble = your phone code name 
+Crave pull out/target/product/*/*zip
+cd marble
 wget https://raw.githubusercontent.com/lordgaruda/GoFile-Upload/refs/heads/master/upload.sh
 chmod +x upload.sh
-./upload.sh *.zip*
+TELEGRAM_TOKEN="18912165324:AAFkT_freQE2COyn5jhjfk-rmdjkBGRnL80"
+CHAT_ID="@archivenyamasagung"
+GOFILE_LINK=$(./upload.sh *.zip* | grep -oE 'https://gofile\.io/d/[a-zA-Z0-9]+' | head -n 1)
+if [ -n "$GOFILE_LINK" ]; then
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+        -d "chat_id=${CHAT_ID}" \
+        -d "text=New Build Rom By @SkuyyyLaahhh: ${GOFILE_LINK}"
+fi
 rm *.zip*
