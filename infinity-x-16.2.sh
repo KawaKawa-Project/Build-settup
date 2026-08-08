@@ -17,5 +17,5 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 . build/envsetup.sh
 
 # 4. lunch & build
-lunch infinity_marble-bp4a-userdebug
+lunch infinity_marble-userdebug
 m bacon
