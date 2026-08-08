@@ -5,7 +5,7 @@
 rm -rf .repo/local_manifests
 
 # 1. Initial ROM source
-repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs --depth=1
+repo init --depth=1 --no-repo-verify --git-lfs -u https://github.com/ProjectInfinity-X/manifest -b 16 -g default,-mips,-darwin,-notdefault
 
 # 1,5 add local manifest
 git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_local_manifest .repo/local_manifests
@@ -17,5 +17,5 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 . build/envsetup.sh
 
 # 4. lunch & build
-lunch lineage_marble-bp4a-userdebug
+lunch infinity_marble-bp4a-userdebug
 m bacon
