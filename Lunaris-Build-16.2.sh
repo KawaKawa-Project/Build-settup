@@ -18,3 +18,6 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 # 4. lunch & build
 lunch lineage_marble-bp4a-userdebug
 m bacon
+
+# 5. pull out build zip
+crave pull out/target/product/*/*zip
