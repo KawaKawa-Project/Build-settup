@@ -19,3 +19,6 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 # 4. lunch & build
 lunch infinity_marble-userdebug
 m bacon
+
+# 5. pull out build zip
+crave pull out/target/product/*/*zip
