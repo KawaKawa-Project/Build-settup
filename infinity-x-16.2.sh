@@ -3,7 +3,7 @@
 TOKEN_BOT="8912165324:AAH3r8qs7Mtl1N7_z3W5msuoiyRIZVNfgyg"
 TARGET_SEND="@archivenyamasagung"
 
-START_MSG="New Plan Build Marble, Lunaris AOSP%0AMaintainer @SkuyyyLaahhh"
+START_MSG="New Plan Build Marble, InfinityX%0AMaintainer @SkuyyyLaahhh"
 curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
     -d chat_id="${TARGET_SEND}" \
     -d text="${START_MSG}"
