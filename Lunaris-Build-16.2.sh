@@ -26,30 +26,3 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b Lunaris_loca
 # 4. lunch & build
 lunch lineage_marble-bp4a-userdebug
 m bacon
-
-# 5. pull out build zip
-crave pull out/target/product/*/*.zip
-cd marble
-ZIP_NAME=$(ls *.zip | head -n 1)
-
-if [ -f "$ZIP_NAME" ]; then
-    # Github script gofile uploader
-    wget -qO upload.sh https://raw.githubusercontent.com/lordgaruda/GoFile-Upload/refs/heads/master/upload.sh
-    chmod +x upload.sh
-
-    # upload to gofile
-    UPLOAD_OUTPUT=$(./upload.sh "$ZIP_NAME")
-    LINK=$(echo "$UPLOAD_OUTPUT" | grep -Eo 'https://gofile.io/d/[a-zA-Z0-9]+' | head -n 1)
-
-    rm *.zip
-
-    if [ -z "$LINK" ]; then
-        LINK="link not detected"
-    fi
-
-    # Bot Telegram
-    SUCCESS_MSG="New Build Rom By @SkuyyyLaahhh%0A${ZIP_NAME}%0ALink : ${LINK}"
-    curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
-        -d chat_id="${TARGET_SEND}" \
-        -d text="${SUCCESS_MSG}"
-fi
