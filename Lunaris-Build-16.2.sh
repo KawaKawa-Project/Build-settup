@@ -12,8 +12,9 @@ curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
     -d chat_id="${TARGET_SEND}" \
     -d text="${START_MSG}"
 
-# Clean
+# Clean manifest dan device tree yang bermasalah sebelumnya
 rm -rf .repo/local_manifests
+rm -rf device/xiaomi/marble
 
 # 1. Initial ROM source
 repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs --depth=1
