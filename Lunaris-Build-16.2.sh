@@ -1,18 +1,6 @@
 #!/bin/bash
 
-TOKEN_BOT="8912165324:AAFdrzRlTInk5QB49EI3Oo9hBn7LKc-sGtQ"
-TARGET_SEND="@kawabuildsupport"
-
-START_MSG="
-New Plan Build Marble, Lunaris AOSP
-Maintainer @SkuyyyLaahhh
-Adding
-Powerhint, MGLRU on kernel"
-curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
-    -d chat_id="${TARGET_SEND}" \
-    -d text="${START_MSG}"
-
-# Clean manifest dan device tree yang bermasalah sebelumnya
+# Clean manifest & device tree 
 rm -rf .repo/local_manifests
 rm -rf device/xiaomi/marble
 
