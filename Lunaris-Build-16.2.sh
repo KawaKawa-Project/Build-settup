@@ -1,9 +1,13 @@
 #!/bin/bash
 
-TOKEN_BOT="8912165324:AAH3r8qs7Mtl1N7_z3W5msuoiyRIZVNfgyg"
-TARGET_SEND="@archivenyamasagung"
+TOKEN_BOT="8912165324:AAFdrzRlTInk5QB49EI3Oo9hBn7LKc-sGtQ"
+TARGET_SEND="@kawabuildsupport"
 
-START_MSG="New Plan Build Marble, Lunaris AOSP%0AMaintainer @SkuyyyLaahhh"
+START_MSG="
+New Plan Build Marble, Lunaris AOSP
+Maintainer @SkuyyyLaahhh
+Adding
+Powerhint, MGLRU on kernel"
 curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
     -d chat_id="${TARGET_SEND}" \
     -d text="${START_MSG}"
