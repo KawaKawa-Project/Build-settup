@@ -2,7 +2,6 @@
 
 # Clean manifest & device tree 
 rm -rf .repo/local_manifests
-rm -rf device/xiaomi/marble
 
 # 1. Initial ROM source
 repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs --depth=1
