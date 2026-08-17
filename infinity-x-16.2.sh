@@ -1,13 +1,5 @@
 #!/bin/bash
 
-TOKEN_BOT="8912165324:AAH3r8qs7Mtl1N7_z3W5msuoiyRIZVNfgyg"
-TARGET_SEND="@archivenyamasagung"
-
-START_MSG="New Plan Build Marble, InfinityX%0AMaintainer @SkuyyyLaahhh"
-curl -s -X POST "https://api.telegram.org/bot${TOKEN_BOT}/sendMessage" \
-    -d chat_id="${TARGET_SEND}" \
-    -d text="${START_MSG}"
-    
 #Clean
 rm -rf .repo/local_manifests
 
@@ -25,4 +17,5 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 
 # 4. lunch & build
 lunch infinity_marble-userdebug
+make installclean
 m bacon
