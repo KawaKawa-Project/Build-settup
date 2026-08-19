@@ -2,7 +2,7 @@
 
 #Clean
 rm -rf .repo/local_manifests
-rm -rf kernel/xiaomi/marble
+rm -rf kernel/xiaomi/sm8450
 rm -rf device/xiaomi/marble
 
 # 1. Initial ROM source
@@ -15,7 +15,7 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 /opt/crave/resync.sh
 
 # 3. Add Root Resukisu
-cd kernel/xiaomi/marble
+cd kernel/xiaomi/sm8450
 curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
 cd ../../../..
 
