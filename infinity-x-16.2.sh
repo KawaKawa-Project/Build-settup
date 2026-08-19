@@ -11,6 +11,9 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 
 # 2. Sync ROM
 /opt/crave/resync.sh
+cd kernel/xiaomi/marble
+curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+cd ../../../..
 
 # 3. Start the build ROM
 . build/envsetup.sh
