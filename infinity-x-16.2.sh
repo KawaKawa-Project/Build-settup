@@ -17,7 +17,7 @@ git clone https://github.com/KawaKawa-Project/local_manifest.git -b infinity-x_l
 # 3. Add Root Resukisu
 cd kernel/xiaomi/sm8450
 curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
-cd ../../../..
+cd -
 
 # 4. Start the build ROM
 . build/envsetup.sh
