@@ -14,7 +14,7 @@ repo init -u https://github.com/Lunaris-AOSP/android -b 16.2 --git-lfs --depth=1
 
 # Device 
 git clone https://github.com/KawaKawa-Project/device_xiaomi_marble_by_aosp_pablo.git -b LunarisAOSP device/xiaomi/marble
-git clone https://github.com/KawaKawa-Project/device_xiaomi_sm8450-common_by_aosp_pablo.git -b 16 device/xiaomi/sm8450-common
+git clone https://github.com/KawaKawa-Project/device_xiaomi_sm8450-common_by_aosp_pablo.git -b LunarisAOSP device/xiaomi/sm8450-common
 
 # Vendor
 git clone https://github.com/KawaKawa-Project/vendor_xiaomi_marble_by_pablo.git -b 16 --depth=1 vendor/xiaomi/marble
