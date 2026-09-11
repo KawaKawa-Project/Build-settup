@@ -17,9 +17,9 @@ git clone https://github.com/KawaKawa-Project/device_xiaomi_marble_by_aosp_pablo
 git clone https://github.com/KawaKawa-Project/device_xiaomi_sm8450-common_by_aosp_pablo.git -b LunarisAOSP device/xiaomi/sm8450-common
 
 # Vendor
-git clone https://github.com/KawaKawa-Project/vendor_xiaomi_marble_by_pablo.git -b 16 --depth=1 vendor/xiaomi/marble
-git clone https://github.com/KawaKawa-Project/vendor_xiaomi_sm8450-common_by_aosp_pablo.git -b 16 --depth=1 vendor/xiaomi/sm8450-common
-git clone https://github.com/KawaKawa-Project/vendor_xiaomi_marble-firmware_by_aosp_pablo.git -b 16 --depth=1 vendor/xiaomi/marble-firmware
+git clone https://github.com/KawaKawa-Project/vendor_xiaomi_marble_by_pablo.git -b LunarisAOSP --depth=1 vendor/xiaomi/marble
+git clone https://github.com/KawaKawa-Project/vendor_xiaomi_sm8450-common_by_aosp_pablo.git -b LunarisAOSP --depth=1 vendor/xiaomi/sm8450-common
+git clone https://github.com/KawaKawa-Project/vendor_xiaomi_marble-firmware_by_aosp_pablo.git -b LunarisAOSP --depth=1 vendor/xiaomi/marble-firmware
 
 # MIUI Camera
 git clone https://github.com/KawaKawa-Project/device_xiaomi_miuicamera-marble_by_aosp_pablo.git -b 16 device/xiaomi/miuicamera-marble
@@ -30,9 +30,9 @@ git clone https://github.com/KawaKawa-Project/android_hardware_xiaomi_by_aosp_pa
 git clone https://github.com/KawaKawa-Project/hardware_dolby_by_aosp_pablo.git -b xiaomi-blobs hardware/dolby
 
 # Kernel
-git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450_by_aosp_pablo.git -b 16 --depth=1 kernel/xiaomi/sm8450
-git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450-modules_by_aosp_pablo.git -b 16 --depth=1 kernel/xiaomi/sm8450-modules
-git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450-devicetrees_by_aosp_pablo.git -b 16 --depth=1 kernel/xiaomi/sm8450-devicetrees
+git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450_by_aosp_pablo.git -b LunarisAOSP --depth=1 kernel/xiaomi/sm8450
+git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450-modules_by_aosp_pablo.git -b LunarisAOSP --depth=1 kernel/xiaomi/sm8450-modules
+git clone https://github.com/KawaKawa-Project/android_kernel_xiaomi_sm8450-devicetrees_by_aosp_pablo.git -b LunarisAOSP --depth=1 kernel/xiaomi/sm8450-devicetrees
 
 # 3. Inject Release Keys Private
 mkdir -p vendor/extra/keys
