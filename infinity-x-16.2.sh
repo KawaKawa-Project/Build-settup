@@ -135,7 +135,17 @@ git clone \
     kernel/xiaomi/sm8450-devicetrees
 
 
-# 10. Add Root - ReSukiSU
+# 10. Add Release Keys
+
+git clone \
+    --depth1 \
+    --single-branch \
+    -b keys \
+    https://github.com/KawaKawa-Project/sign.git \
+    vendor/infinity-priv/keys
+
+
+# 12. Add Root - ReSukiSU
 
 cd kernel/xiaomi/sm8450
 curl -LSs \
@@ -144,12 +154,12 @@ curl -LSs \
 cd -
 
 
-# 11. Start build 
+# 13. Start build 
 
 . build/envsetup.sh
 
 
-# 12. Lunch & Build
+# 14. Lunch & Build
 
 lunch infinity_marble-userdebug
 make installclean
