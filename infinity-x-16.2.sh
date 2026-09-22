@@ -41,7 +41,7 @@ git clone \
     --depth1 \
     --single-branch \
     -b infinity \
-    https://github.com/aosp-pablo/device_xiaomi_marble.git \
+    https://github.com/KawaKawa-Project/device_xiaomi_marble.git\
     device/xiaomi/marble
 git clone \
     --depth1 \
