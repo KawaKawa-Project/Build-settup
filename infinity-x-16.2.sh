@@ -22,7 +22,7 @@ rm -rf \
 # 1. Initial ROM source
 
 repo init \
-    --depth1 \
+    --depth=1 \
     --no-repo-verify \
     --git-lfs \
     -u https://github.com/ProjectInfinity-X/manifest \
