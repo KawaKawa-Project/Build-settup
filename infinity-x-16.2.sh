@@ -38,13 +38,13 @@ repo init \
 # 3. Device
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b infinity \
     https://github.com/KawaKawa-Project/device_xiaomi_marble.git\
     device/xiaomi/marble
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/device_xiaomi_sm8450-common.git \
@@ -54,13 +54,13 @@ git clone \
 # 4. Vendor
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/vendor_xiaomi_marble.git \
     vendor/xiaomi/marble
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/vendor_xiaomi_sm8450-common.git \
@@ -70,7 +70,7 @@ git clone \
 # 5. Firmware
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/vendor_xiaomi_marble-firmware.git \
@@ -80,13 +80,13 @@ git clone \
 # 6. MIUI Camera
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/device_xiaomi_miuicamera-marble.git \
     device/xiaomi/miuicamera-marble
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/vendor_xiaomi_miuicamera-marble.git \
@@ -96,7 +96,7 @@ git clone \
 # 7. Hardware Xiaomi
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b lineage-23.0 \
     https://github.com/aosp-pablo/android_hardware_xiaomi.git \
@@ -106,7 +106,7 @@ git clone \
 # 8. Dolby
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b xiaomi-blobs \
     https://github.com/aosp-pablo/hardware_dolby.git \
@@ -116,19 +116,19 @@ git clone \
 # 9. Kernel
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/android_kernel_xiaomi_sm8450.git \
     kernel/xiaomi/sm8450
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/android_kernel_xiaomi_sm8450-modules.git \
     kernel/xiaomi/sm8450-modules
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b 16 \
     https://github.com/aosp-pablo/android_kernel_xiaomi_sm8450-devicetrees.git \
@@ -138,7 +138,7 @@ git clone \
 # 10. Add Release Keys
 
 git clone \
-    --depth1 \
+    --depth=1 \
     --single-branch \
     -b keys \
     https://github.com/KawaKawa-Project/sign.git \
